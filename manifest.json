@@ -2,5 +2,11 @@
     {
     "name":"PocketWisely",
     "version":"0.0.1",
-    "manifest_version":3
+    "manifest_version":3,
+    "content_scripts": [
+  {
+    "matches": ["*://*.amazon.in/*", "*://*.myntra.com/*","*://*.flipkart.com/*","*://*.nykaa.com/*","*://*.ajio.com/*","*://*.shoppersstop.com/*"],
+    "js": ["content.js"]
+  }
+]
 }
