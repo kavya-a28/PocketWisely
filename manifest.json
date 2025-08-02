@@ -8,5 +8,13 @@
     "matches": ["*://*.amazon.in/*", "*://*.myntra.com/*","*://*.flipkart.com/*","*://*.nykaa.com/*","*://*.ajio.com/*","*://*.shoppersstop.com/*"],
     "js": ["content.js"]
   }
+],
+"background": {
+  "service_worker": "background.js"
+},
+"permissions": [
+  "activeTab",
+  "scripting"
 ]
+
 }
