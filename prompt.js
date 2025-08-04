@@ -1,37 +1,48 @@
 // prompt.js
 
-// We wrap our entire script in an IIFE to create a private scope.
-// This prevents the "has already been declared" error on subsequent clicks.
 (function() {
-
-    console.log("🟢 PocketWisely prompt script injected into a private scope!");
+    console.log("🟢 PocketWisely prompt script injected!");
 
     function scrapeProductData() {
-        const nameEl = document.querySelector('#productTitle');
-        const priceEl = document.querySelector('.a-price .a-offscreen');
-        const imageEl = document.querySelector('#landingImage');
+        // First, find the specific product container we "marked" earlier
+        const targetItem = document.getElementById('pocketwisely-target-item');
 
-        if (!nameEl || !priceEl || !imageEl) {
-            console.log("On a listing page or details not found. Showing generic prompt.");
+        if (!targetItem) {
+            console.error("Could not find the marked target item.");
             return null;
         }
+
+        // Now, we use selectors that work INSIDE a product card, not on the whole page
+        const nameEl = targetItem.querySelector('h2 .a-text-normal, .a-size-base-plus.a-text-normal');
+        const priceEl = targetItem.querySelector('.a-price-whole');
+        const priceFractionEl = targetItem.querySelector('.a-price-fraction');
+        const imageEl = targetItem.querySelector('.s-image');
+
+        // Clean up the temporary ID so it doesn't interfere with the page
+        targetItem.id = '';
+
+        // If we can't find the core details, return null
+        if (!nameEl || !priceEl) {
+             console.log("On a listing page but couldn't find details inside the card.");
+            return null;
+        }
+        
         const name = nameEl.innerText.trim();
-        const price = priceEl.innerText.trim();
-        const image = imageEl.src;
+        const price = "₹" + priceEl.innerText.trim() + (priceFractionEl ? priceFractionEl.innerText.trim() : '00');
+        const image = imageEl ? imageEl.src : ''; // Use a placeholder if no image
+
         return { name, price, image };
     }
 
     function showImpulseBlockerPrompt(product) {
-        // First, remove any prompt that might already be on the page
         const oldPrompt = document.getElementById('pocketwisely-prompt-overlay');
-        if (oldPrompt) {
-            oldPrompt.remove();
-        }
+        if (oldPrompt) { oldPrompt.remove(); }
 
         const productName = product ? product.name : "this item";
         const productPrice = product ? product.price : "this amount";
-        const productImageHTML = product ? `<img src="${product.image}" alt="${product.name}" />` : "";
+        const productImageHTML = product && product.image ? `<img src="${product.image}" alt="${product.name}" />` : "";
 
+        // The rest of this function (the HTML and CSS) remains the same as before...
         const promptHTML = `
         <div id="pocketwisely-prompt-overlay">
           <div id="pocketwisely-prompt">
@@ -87,4 +98,4 @@
     const productData = scrapeProductData();
     showImpulseBlockerPrompt(productData);
 
-})(); // The () at the end immediately runs the function
+})();
