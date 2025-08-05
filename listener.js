@@ -1,7 +1,7 @@
 // listener.js
 
 // This message is the proof that you are running the correct, final version of the code.
-console.log("✅ PocketWisely Listener.js --- VERSION 13 (Definitive Table Architecture) --- is running.");
+console.log("✅ PocketWisely Listener.js --- VERSION 16 (Clean Titles) --- is running.");
 
 // Selectors for all possible "Add to Cart" or "Buy Now" buttons on Amazon
 const purchaseButtonSelectors = [
@@ -9,12 +9,12 @@ const purchaseButtonSelectors = [
     '#buy-now-button',
     '[name^="submit.addToCart"]',
     '[data-action="add-to-cart-button"]'
-].join(', ');
+];
 
 
 /**
  * The DEFINITIVE function to handle the "Compare with similar items" table.
- * This version uses a robust "Row Header + Column Index" method that makes no assumptions.
+ * This version now returns ONLY the product name, without the "This Item:" prefix.
  * @param {HTMLElement} button - The button element that was clicked.
  * @returns {object|null} The scraped product data.
  */
@@ -25,45 +25,43 @@ function scrapeComparisonTable(button) {
     const buttonCell = button.closest('td');
     if (!buttonCell) return null;
 
-    // STEP 1: Determine the exact column index of the clicked button (e.g., 0, 1, 2...).
+    // STEP 1: Determine the exact column index of the clicked button.
     const buttonRow = buttonCell.parentElement;
     const columnIndex = Array.from(buttonRow.children).indexOf(buttonCell);
 
-    // STEP 2: Find the Name and Image from the first row at the same column index.
+    // STEP 2: Find the main header cell in the first row at the same column index.
     const headerRow = table.querySelector('tbody > tr');
     if (!headerRow || !headerRow.children[columnIndex]) return null;
     
     const nameAndImageCell = headerRow.children[columnIndex];
-    const nameEl = nameAndImageCell.querySelector('div[class*="titleStyle"] span.a-size-base');
+    const nameContainerEl = nameAndImageCell.querySelector('div[class*="titleStyle"]');
     const imageEl = nameAndImageCell.querySelector('img');
 
-    // STEP 3: Find the Price by first finding the "Price" row, then getting the cell at the same column index.
+    // STEP 3: Find the Price by first finding the "Price" row, then getting the correct cell.
     let priceEl = null;
     const allRows = table.querySelectorAll('tbody > tr');
     for (const row of allRows) {
         const firstCellInRow = row.children[0];
-        // Find the row that starts with the word "Price"
         if (firstCellInRow && firstCellInRow.textContent.trim().toLowerCase() === 'price') {
             const priceCell = row.children[columnIndex];
             if (priceCell) {
                 priceEl = priceCell.querySelector('.a-price .a-offscreen');
             }
-            break; // Stop searching once we've found the price row
+            break; 
         }
     }
     
-    // STEP 4: Assemble and return the data.
-    if (nameEl && priceEl) {
+    // STEP 4: Assemble and return the complete data.
+    if (nameContainerEl && priceEl) {
+        // Get the full product name, and clean up any extra whitespace.
+        const fullName = nameContainerEl.textContent.replace(/\s+/g, ' ').trim();
+
         return {
-            name: nameEl.textContent.trim(),
+            name: fullName, // Return just the clean name, without the context label.
             price: priceEl.innerText.trim(),
             image: imageEl ? imageEl.src : ''
         };
     }
-    
-    // Log errors if something specific was not found
-    if (!nameEl) console.error("TABLE SCRAPE FAILED: Could not find the name element in the header row.");
-    if (!priceEl) console.error("TABLE SCRAPE FAILED: Could not find the price element in the price row.");
     
     return null;
 }
@@ -136,7 +134,7 @@ function scrapeDataForClickedButton(button) {
 
 // The main event listener remains the same.
 document.body.addEventListener('click', function(event) {
-    const clickedButton = event.target.closest(purchaseButtonSelectors);
+    const clickedButton = event.target.closest(purchaseButtonSelectors.join(', '));
 
     if (clickedButton) {
         console.log('🛒 Purchase button clicked! Intercepting...');
